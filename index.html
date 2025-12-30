@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>心力快充站</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        /* 核心充电动画 */
+        @keyframes flow {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .battery-liquid {
+            background: linear-gradient(270deg, #34d399, #10b981, #059669);
+            background-size: 200% 200%;
+            transition: height 0.1s linear;
+        }
+        
+        .charging-anim {
+            animation: flow 2s ease infinite;
+        }
+
+        .fade-in { animation: fadeIn 0.6s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 强制隐藏 */
+        .hidden-section { display: none !important; }
+        
+        /* 选项卡片点击动效 */
+        .option-card:active { transform: scale(0.98); }
+        
+        /* 隐藏滚动条但保持滚动 */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 h-[100dvh] w-screen flex flex-col items-center justify-center p-0 relative overflow-hidden">
+
+    <!-- 背景氛围 -->
+    <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-gray-50 to-gray-200 -z-10"></div>
+
+    <!-- 界面一：诊断 (漏电检测) -->
+    <div id="screen-diagnose" class="w-full max-w-md flex flex-col items-center fade-in h-full overflow-y-auto no-scrollbar px-6 pt-6 pb-32">
+        
+        <header class="text-center mb-6 flex-shrink-0 mt-4">
+            <div class="inline-flex items-center gap-2 bg-white px-3 py-1 rounded-full shadow-sm border border-gray-200 mb-4">
+                <span class="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+                <span class="text-xs font-bold text-gray-500 uppercase tracking-widest">System Diagnosis</span>
+            </div>
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-1">心力快充站</h1>
+            <p class="text-gray-500 text-sm">给紧绷的中年系统，做一次 5 分钟快充</p>
+        </header>
+
+        <!-- 大电池图标 -->
+        <div class="relative w-20 h-32 border-4 border-gray-300 rounded-2xl p-1 mb-8 flex-shrink-0 flex items-end justify-center bg-white shadow-lg">
+            <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-8 h-3 bg-gray-300 rounded-t-md"></div>
+            <div class="w-full h-[20%] bg-red-500 rounded-lg opacity-80" id="battery-level"></div>
+            <div class="absolute inset-0 flex items-center justify-center">
+                <span class="text-xl font-bold text-gray-400/50">20%</span>
+            </div>
+        </div>
+
+        <h3 class="text-base font-bold mb-4 text-gray-700 flex-shrink-0">此刻，是什么在消耗你的电量？</h3>
+
+        <!-- 8大耗电场景 (2列布局) -->
+        <div class="grid grid-cols-2 gap-3 w-full">
+            <button onclick="startCharging('anxiety')" class="option-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-red-400 hover:shadow-md transition-all text-left group">
+                <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">🌪️</div>
+                <div class="font-bold text-gray-800">焦虑</div>
+                <div class="text-xs text-gray-400">担心未来，怕来不及</div>
+            </button>
+            <button onclick="startCharging('confusion')" class="option-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-gray-400 hover:shadow-md transition-all text-left group">
+                <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">😶‍🌫️</div>
+                <div class="font-bold text-gray-800">迷茫</div>
+                <div class="text-xs text-gray-400">找不到方向，失去目标</div>
+            </button>
+            <button onclick="startCharging('anger')" class="option-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-orange-600 hover:shadow-md transition-all text-left group">
+                <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">🔥</div>
+                <div class="font-bold text-gray-800">愤怒</div>
+                <div class="text-xs text-gray-400">被冒犯，压不住火</div>
+            </button>
+            <button onclick="startCharging('powerless')" class="option-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-orange-400 hover:shadow-md transition-all text-left group">
+                <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">🌫️</div>
+                <div class="font-bold text-gray-800">无力</div>
+                <div class="text-xs text-gray-400">不知为谁忙，没意义</div>
+            </button>
+            <button onclick="startCharging('grievance')" class="option-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-blue-400 hover:shadow-md transition-all text-left group">
+                <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">🌧️</div>
+                <div class="font-bold text-gray-800">委屈</div>
+                <div class="text-xs text-gray-400">付出很多，不被理解</div>
+            </button>
+            <button onclick="startCharging('chaos')" class="option-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-purple-400 hover:shadow-md transition-all text-left group">
+                <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">🌀</div>
+                <div class="font-bold text-gray-800">混乱</div>
+                <div class="text-xs text-gray-400">杂事缠身，脑子发热</div>
+            </button>
+            <button onclick="startCharging('guilt')" class="option-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-pink-400 hover:shadow-md transition-all text-left group">
+                <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">🔗</div>
+                <div class="font-bold text-gray-800">内疚</div>
+                <div class="text-xs text-gray-400">这也没做好，那也亏欠</div>
+            </button>
+            <button onclick="startCharging('lonely')" class="option-card bg-white p-4 rounded-xl shadow-sm border border-gray-100 hover:border-indigo-400 hover:shadow-md transition-all text-left group">
+                <div class="text-2xl mb-1 group-hover:scale-110 transition-transform">🌵</div>
+                <div class="font-bold text-gray-800">孤独</div>
+                <div class="text-xs text-gray-400">人群中，却无人可说</div>
+            </button>
+        </div>
+    </div>
+
+    <!-- 界面二：充电中 (仪式感动画) -->
+    <div id="screen-charging" class="hidden-section w-full max-w-md flex-col items-center justify-center h-screen fixed inset-0 bg-white z-50">
+        <div class="text-center mb-12">
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">正在切断无效连接...</h2>
+            <p class="text-sm text-gray-500 animate-pulse">请深呼吸，允许自己停机 3 秒</p>
+        </div>
+
+        <!-- 充电动画电池 -->
+        <div class="relative w-32 h-52 border-4 border-gray-200 rounded-3xl p-2 mb-8 shadow-2xl">
+            <div class="absolute -top-4 left-1/2 -translate-x-1/2 w-10 h-4 bg-gray-200 rounded-t-lg"></div>
+            <div class="w-full h-full bg-gray-100 rounded-xl overflow-hidden relative">
+                <div id="charging-fill" class="absolute bottom-0 left-0 w-full bg-green-400 h-0 battery-liquid charging-anim"></div>
+            </div>
+            <!-- 闪电图标 -->
+            <div class="absolute inset-0 flex items-center justify-center z-10">
+                <svg class="w-12 h-12 text-white drop-shadow-md animate-bounce" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"></path></svg>
+            </div>
+        </div>
+
+        <div class="text-green-500 font-mono font-bold text-xl" id="percent-text">0%</div>
+    </div>
+
+    <!-- 界面三：结果 (能量胶囊) -->
+    <div id="screen-result" class="hidden-section w-full max-w-md flex-col items-center fade-in h-full overflow-y-auto no-scrollbar p-6 pb-20">
+        
+        <div class="text-center mb-6 mt-4">
+            <div class="inline-block bg-green-100 text-green-700 px-4 py-1 rounded-full text-xs font-bold mb-2">
+                ⚡ 充能完毕
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900">你的专属能量处方</h2>
+        </div>
+
+        <!-- 处方卡片 -->
+        <div class="bg-white w-full rounded-2xl shadow-xl overflow-hidden border border-gray-100 mb-8 transform transition hover:scale-[1.01] duration-300 flex-shrink-0">
+            <!-- 顶部颜色条 -->
+            <div class="h-2 w-full bg-gradient-to-r from-green-400 to-teal-500"></div>
+            
+            <div class="p-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="text-4xl" id="result-emoji">💡</span>
+                    <div>
+                        <h3 class="font-bold text-gray-900 text-lg" id="result-title">处方加载中...</h3>
+                        <p class="text-xs text-gray-400">Joyce's Prescription</p>
+                    </div>
+                </div>
+
+                <div class="mb-8 relative">
+                    <span class="absolute -top-4 -left-2 text-6xl text-gray-100 font-serif">“</span>
+                    <p class="text-lg text-gray-700 font-medium leading-relaxed relative z-10 italic" id="result-quote">
+                        ...
+                    </p>
+                </div>
+
+                <div class="bg-gray-50 rounded-xl p-5 border-l-4 border-green-500">
+                    <h4 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">架构师洞察 (Insight)</h4>
+                    <p class="text-sm text-gray-600 leading-relaxed" id="result-insight">
+                        ...
+                    </p>
+                </div>
+            </div>
+            
+            <!-- 底部按钮 -->
+            <div class="bg-gray-50 p-4 flex justify-between items-center border-t border-gray-100">
+                <span class="text-xs text-gray-400 font-mono">© Life Systems Architect</span>
+                <button onclick="resetApp()" class="text-sm text-gray-600 font-bold hover:text-green-600 flex items-center gap-1 cursor-pointer">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                    再测一次
+                </button>
+            </div>
+        </div>
+
+        <!-- 转化钩子 -->
+        <div class="text-center space-y-4 px-4 pb-10">
+            <p class="text-sm text-gray-500">觉得胶囊不够？<br>系统底层 Bug 可能需要深度修复。</p>
+            <button onclick="showQRCode()" class="bg-black text-white px-8 py-3 rounded-full font-bold text-sm shadow-lg hover:bg-gray-800 transition-all w-full tracking-wide">
+                预约 Joyce 的深度系统调试 ->
+            </button>
+        </div>
+
+    </div>
+
+    <!-- 界面四：二维码弹窗 -->
+    <div id="screen-qr" class="hidden-section fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm fade-in" onclick="closeQRCode()">
+        <div class="bg-white rounded-3xl p-8 max-w-xs w-full mx-6 shadow-2xl relative text-center" onclick="event.stopPropagation()">
+            <button onclick="closeQRCode()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+            
+            <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                💬
+            </div>
+            
+            <h3 class="text-xl font-bold text-gray-900 mb-2">预约深度对话</h3>
+            <p class="text-sm text-gray-500 mb-6">添加 Joyce 微信<br>备注 <span class="font-bold text-gray-800">"心力快充"</span> 优先通过</p>
+            
+            <!-- 二维码占位符 -->
+            <div class="w-48 h-48 mx-auto bg-gray-50 rounded-xl p-2 border border-gray-100 mb-4 shadow-inner">
+                <img src="qr_code.jpg" alt="QR Code" class="w-full h-full object-contain rounded-lg">
+            </div>
+            
+            <p class="text-xs text-gray-400">长按图片识别二维码</p>
+        </div>
+    </div>
+
+    <script>
+        // --- 海量随机题库 (每个类别 10+ 条) ---
+        const prescriptions = {
+            'anxiety': [
+                { emoji: '🛡️', title: '焦虑处方 #01', quote: '焦虑，是因为你在用现在的电量，去跑未来一年的超大模型。', insight: '系统过热是因为计算量溢出。降级运行吧：只关注接下来 10 分钟能做的具体动作。焦虑的反义词不是平静，而是“具体”。' },
+                { emoji: '⏳', title: '焦虑处方 #02', quote: '你想要“确定性”，但世界的本质是“概率”。你在试图计算不可计算的东西。', insight: '不要为了 1% 的意外耗费 99% 的算力。允许不确定性存在，那是系统的冗余空间。天塌不下来，先喝口水。' },
+                { emoji: '🧘', title: '焦虑处方 #03', quote: '允许自己在这个瞬间“无能为力”。', insight: '此刻的焦虑，往往是“控制欲”的过载。试着松开手，哪怕只有一分钟。告诉自己：系统正在自动维护，我不需要时刻盯着仪表盘。' },
+                { emoji: '🌬️', title: '焦虑处方 #04', quote: '停下来，你的 CPU 并没有冒烟，它只是在空转。', insight: '闭上眼，深呼吸 3 次。把注意力从脑袋（思维）转移到脚底（体感）。这就是最快的物理降温。' },
+                { emoji: '📦', title: '焦虑处方 #05', quote: '把明天的烦恼，打包存进明天的文件夹。', insight: '今天的内存只处理今天的事。那些还没发生的灾难，99% 都不会发生。别为了想象中的 Bug 熬夜修补。' },
+                { emoji: '🐢', title: '焦虑处方 #06', quote: '慢一点，也是一种速度。', insight: '当你越想快的时候，系统越容易卡死。允许自己像乌龟一样爬一会儿。慢下来，你才能看清路。' },
+                { emoji: '💡', title: '焦虑处方 #07', quote: '你现在感到的恐惧，只是大脑的一场“压力测试”。', insight: '这只是一个模拟演习，不是真实发生的灾难。观察它，通过它，然后放下它。你比你的恐惧更强大。' },
+                { emoji: '🛁', title: '焦虑处方 #08', quote: '去洗个热水澡，或者整理一下桌面。', insight: '当内在失序时，通过建立外在的秩序来恢复掌控感。简单的机械劳动，是最好的镇静剂。' },
+                { emoji: '🚫', title: '焦虑处方 #09', quote: '此时此刻，你其实是安全的。', insight: '环顾四周，没有老虎，没有悬崖。所有的危险都只存在于你的想象中。回到当下，回到呼吸，你就安全了。' },
+                { emoji: '🛌', title: '焦虑处方 #10', quote: '如果解决不了，那就先去睡觉。', insight: '没有什么事是睡一觉解决不了的。如果有，那就睡两觉。睡眠是系统自带的“重启键”，用好它。' }
+            ],
+            'confusion': [
+                { emoji: '🧭', title: '迷茫处方 #01', quote: '迷茫不是因为你走错了，而是因为旧的地图已经配不上新的你了。', insight: '你的系统正在进行后台更新。这种“找不到方向”的感觉，其实是系统升级期间的必经之路。别急着找路，先确认自己要去哪。' },
+                { emoji: '🔦', title: '迷茫处方 #02', quote: '看不清未来时，就低头看脚下。', insight: '在工程学里，当全局导航失效时，我们会切换到“局部探索模式”。做好手边这一件小事，它会成为你破局的第一个支点。' },
+                { emoji: '🔭', title: '迷茫处方 #03', quote: '你不是没有动力，你是没有被“看见”。', insight: '迷茫往往是因为你的天赋（特定知识）还没被激活。与其向外寻找风口，不如向内扫描：什么事是你做起来不觉得累的？那就是线索。' },
+                { emoji: '🛤️', title: '迷茫处方 #04', quote: '没有白走的路，每一步都算数。', insight: '那些看似弯路的地方，其实藏着你最独特的风景。把这些经历当成数据积累，它们终将在未来的某一天连点成线。' },
+                { emoji: '🔍', title: '迷茫处方 #05', quote: '答案不在外面，而在你心里被忽略的角落。', insight: '试着问自己：如果不需要考虑钱和面子，我现在最想做的一件事是什么？那个答案，就是你的指南针。' },
+                { emoji: '🛑', title: '迷茫处方 #06', quote: '停下来，不代表倒退。', insight: '迷茫是灵魂在喊停。它在告诉你：现在的路不对劲。感谢这份迷茫，它让你有机会重新校准方向。' },
+                { emoji: '🌟', title: '迷茫处方 #07', quote: '你不需要看清整条楼梯，只需要看清第一级台阶。', insight: '行动是治愈迷茫的良药。随便做点什么，哪怕是错的，也比站在原地空想要好。动起来，路自然就现了。' },
+                { emoji: '🧩', title: '迷茫处方 #08', quote: '把自己打碎了，才能拼出新的图案。', insight: '迷茫期就是重组期。允许自己有一段时间的混乱，那是新秩序诞生前的阵痛。保持耐心，让子弹飞一会儿。' },
+                { emoji: '🚪', title: '迷茫处方 #09', quote: '当上帝关上一扇门，别傻站在门口敲。', insight: '去找窗户，或者去拆墙。迷茫是因为你还盯着那扇关上的门。转个身，你会发现世界依然广阔。' },
+                { emoji: '🌱', title: '迷茫处方 #10', quote: '给自己一点时间，让种子发芽。', insight: '你不是在荒废，你是在扎根。看不见的生长，也是生长。相信时间的复利，相信你的积累。' }
+            ],
+            'anger': [
+                { emoji: '🔥', title: '愤怒处方 #01', quote: '愤怒是系统的一种“过压保护”，它在提醒你：边界被侵犯了。', insight: '不要压抑愤怒，那是你的能量在保护你。试着把这股火转化成行动力：去说“不”，去建立规则，去捍卫你的领地。' },
+                { emoji: '🛑', title: '愤怒处方 #02', quote: '你对他人的愤怒，往往源于对自己的无力。', insight: '当我们无法控制局面时，系统会通过发热（愤怒）来释放压力。承认自己的无力，不是软弱，而是给系统降温的开始。' },
+                { emoji: '🧩', title: '愤怒处方 #03', quote: '允许别人做别人，允许自己做自己。', insight: '很多愤怒源于“兼容性错误”。你试图在 Linux 上运行 Windows 程序。放过别人，其实是放过自己的 CPU。' },
+                { emoji: '🧊', title: '愤怒处方 #04', quote: '给情绪一个 60 秒的冷却期。', insight: '愤怒的峰值通常只持续几分钟。深呼吸，数到 10。别在系统过热时做决定，那时候的输出通常全是 Bug。' },
+                { emoji: '🥊', title: '愤怒处方 #05', quote: '不要拿别人的错误来惩罚自己的硬件。', insight: '为了个烂人烂事把自己气坏了，这笔账算不过来。把关注点收回来，你的健康比对错更重要。' },
+                { emoji: '🎭', title: '愤怒处方 #06', quote: '看看愤怒背后，是不是藏着恐惧？', insight: '很多时候，我们发火是因为怕失去控制，怕被看轻。拥抱那个害怕的自己，愤怒自然就消散了。' },
+                { emoji: '🧹', title: '愤怒处方 #07', quote: '这是一次清理垃圾关系的契机。', insight: '如果有人总是让你愤怒，说明他不适合你的系统生态。借此机会，做一次断舍离，把他们请出你的生活。' },
+                { emoji: '🌊', title: '愤怒处方 #08', quote: '像水一样，至柔则至刚。', insight: '硬碰硬会两败俱伤。试着像水一样绕过障碍。柔软不是认输，是一种更高级的生存智慧。' },
+                { emoji: '🗣️', title: '愤怒处方 #09', quote: '把“你怎么能这样”换成“我感到很难过”。', insight: '指责会引来反击，表达脆弱会引来理解。试着用“我”字句沟通，你会发现世界没那么充满敌意。' },
+                { emoji: '🧘', title: '愤怒处方 #10', quote: '此刻，观察那个愤怒的自己，就像观察一场火灾。', insight: '你不是那团火，你是那个观察者。看着它烧起来，看着它熄灭。别跳进去，你就不会被烧伤。' }
+            ],
+            'powerless': [
+                { emoji: '🔋', title: '无力处方 #01', quote: '无力感不是因为你弱，而是因为你在用“短板”死磕世界的“长板”。', insight: '停止通用努力。你的系统正处于“低电量保护模式”。此刻你需要的不是打鸡血，而是找到那个能让你眼睛发亮、做起来像玩的“特定知识”。' },
+                { emoji: '🔌', title: '无力处方 #02', quote: '有时候，我们所谓的“无力”，其实是灵魂在罢工。', insight: '它在抗议你给它喂了太多“应该做”的事，而太少“想要做”的事。请给内核喂一点纯粹的快乐，哪怕只是发呆十分钟。' },
+                { emoji: '🔄', title: '无力处方 #03', quote: '你不是车坏了，你只是导航导错了地方。', insight: '在错误的赛道上，越努力越无力。试着停下来，重新校准目标。也许你不需要跑得更快，只需要换个方向。' },
+                { emoji: '🌱', title: '无力处方 #04', quote: '允许自己做一颗冬天的树。', insight: '冬天的时候，树木看似枯死，实则在积蓄力量。你现在的无力，是为了春天的爆发在储备能量。别急，等等春天。' },
+                { emoji: '👶', title: '无力处方 #05', quote: '像对待婴儿一样对待自己。', insight: '当你没力气的时候，别逼自己跑马拉松。吃好，睡好，晒晒太阳。把自己养回来，比什么都重要。' },
+                { emoji: '📝', title: '无力处方 #06', quote: '哪怕只做成一件事，也是胜利。', insight: '无力感往往来自目标太大。把目标切碎，碎到微不足道。今天只洗一个碗，只读一页书。微小的成就感是最好的充电器。' },
+                { emoji: '🎈', title: '无力处方 #07', quote: '放下那个必须“有用”的执念。', insight: '你不需要每时每刻都有用。偶尔做一个“废物”也很爽。松开那根紧绷的弦，力量反而会回来。' },
+                { emoji: '🤝', title: '无力处方 #08', quote: '试着向外界求助，这不丢人。', insight: '一个好的系统，懂得利用外部接口。承认自己搞不定，找人帮忙，这是一种高级的资源调度能力。' },
+                { emoji: '🎨', title: '无力处方 #09', quote: '去创造点什么，哪怕是乱涂乱画。', insight: '创造是无力感的解药。做顿饭，修剪花草，拼个乐高。在动手中找回掌控感，治愈你的无力。' },
+                { emoji: '🛌', title: '无力处方 #10', quote: '累了就歇着，这天经地义。', insight: '机器都要保养，何况是人？别因为休息而内疚。现在的停机，是为了更长久的续航。' }
+            ],
+            'grievance': [
+                { emoji: '❤️', title: '委屈处方 #01', quote: '所有的委屈，都源于你的“价值评估系统”还挂载在别人的服务器上。', insight: '断开外部链接。试着对自己说：“我看见了你的付出，这就够了。” 收回评价权，你就收回了能量。' },
+                { emoji: '📉', title: '委屈处方 #02', quote: '这是一笔回报率极低的投资。', insight: '你在期待一个不懂你的人突然懂你，这在工程上叫“输入输出不匹配”。及时止损，撤回你的情感投入，投给自己。' },
+                { emoji: '🫂', title: '委屈处方 #03', quote: '没人看见你的好，不代表你不好。', insight: '在这个瞬间，抱抱那个还在等待表扬的小孩。告诉他/她：我们不需要表演给谁看，我们本身就是完整的。' },
+                { emoji: '🎁', title: '委屈处方 #04', quote: '别做了好事，还受了气。', insight: '如果付出会让你感到委屈，那就停止付出。这不仅是保护自己，也是尊重关系。只有心甘情愿的付出，才是爱。' },
+                { emoji: '🗣️', title: '委屈处方 #05', quote: '学会表达你的需求，别让别人猜。', insight: '别人不是你肚子里的蛔虫。大声说出你的不满，说出你想要什么。沟通是消除委屈最直接的代码。' },
+                { emoji: '🏰', title: '委屈处方 #06', quote: '你的价值，不需要别人来盖章。', insight: '你是自己城堡的国王。别人的评价只是风声，吹不倒你的城墙。建立内在的评价体系，稳住。' },
+                { emoji: '💧', title: '委屈处方 #07', quote: '哭出来吧，给情绪排个毒。', insight: '眼泪是系统自带的清洗液。别憋着，找个没人的地方大哭一场。哭完了，你会发现心里轻快了很多。' },
+                { emoji: '🍬', title: '委屈处方 #08', quote: '给受委屈的自己买颗糖。', insight: '世界没给你奖励，你自己给。买件喜欢的衣服，吃顿好的。像宠爱女儿一样宠爱自己，你值得。' },
+                { emoji: '🚪', title: '委屈处方 #09', quote: '道不同不相为谋，不行就换个场子。', insight: '如果在这个环境里总是受委屈，说明磁场不合。换个圈子，换份工作。别在一棵树上吊死，去适合你的地方发光。' },
+                { emoji: '🧘', title: '委屈处方 #10', quote: '一切都是经历，但我选择不受伤。', insight: '把委屈当成修行的课题。观察它，接纳它，然后让它穿过身体流走。我不留它过夜，明天又是新的一天。' }
+            ],
+            'chaos': [
+                { emoji: '🧹', title: '混乱处方 #01', quote: '混乱不是因为事多，而是因为没有按下“暂停键”的勇气。', insight: '现在，立刻，执行一次 `kill -9`。哪怕只有 5 分钟，什么都不做，只是呼吸。给过热的 CPU 一个物理降温的窗口。' },
+                { emoji: '🧵', title: '混乱处方 #02', quote: '试图同时处理所有线程，是系统死锁的根源。', insight: '强制单线程运行。拿出一张纸，写下此刻最重要的一件事。只做这一件，其他的全是噪音。' },
+                { emoji: '🧠', title: '混乱处方 #03', quote: '你的 RAM（内存）溢出了。', insight: '大脑是用来思考的，不是用来记事的。把所有担心的事写下来（外包给纸笔），你会发现脑子瞬间轻了。' },
+                { emoji: '🗑️', title: '混乱处方 #04', quote: '极简主义，是混乱的克星。', insight: '桌面太乱就全扔进抽屉，事情太乱就全删掉不做。只保留最重要的 20%，你会发现世界清爽了。' },
+                { emoji: '🧘', title: '混乱处方 #05', quote: '在混乱中寻找你的“台风眼”。', insight: '外界越乱，内心越要静。每天给自己留一段空白时间，不看手机，不理杂事。那是你的能量充电站。' },
+                { emoji: '📝', title: '混乱处方 #06', quote: '列个清单，划掉一项爽一项。', insight: '焦虑是因为“未知”。把事情列出来，它就变得“可知”且“可控”了。每划掉一项，多巴胺就分泌一次。' },
+                { emoji: '🚫', title: '混乱处方 #07', quote: '学会说“不”，是最高级的能力。', insight: '拒绝那些不重要的人和事。保护你的时间和注意力。你的带宽很贵，别浪费在垃圾流量上。' },
+                { emoji: '📦', title: '混乱处方 #08', quote: '一次只做一件事，慢慢来，比较快。', insight: '多任务处理是谎言。专注当下这一秒，做好手头这一件事。节奏感回来了，混乱自然消退。' },
+                { emoji: '🛁', title: '混乱处方 #09', quote: '整理房间，就是整理内心。', insight: '当心里乱的时候，去擦擦桌子，拖拖地。外在的秩序会映射到内心，让你重新找回平静。' },
+                { emoji: '🌅', title: '混乱处方 #10', quote: '太阳每天照常升起，没什么大不了的。', insight: '别把事情想得太严重。天塌下来有高个子顶着。今晚睡个好觉，明天又是新的一天，一切都会好起来的。' }
+            ],
+            'guilt': [
+                { emoji: '⚖️', title: '内疚处方 #01', quote: '内疚是系统里最大的“漏电保护器”，它让你觉得永远做得不够。', insight: '你不需要做完美的父母或完美的员工。系统允许冗余，允许 Bug。请卸载“必须让所有人满意”的底层代码。' },
+                { emoji: '🚫', title: '内疚处方 #02', quote: '此时的拒绝，是为了更好的服务。', insight: '你的电量是有限的。只有先照顾好核心模块（你自己），你才能持续地为家人和团队供电。牺牲自己不是爱，是不可持续的透支。' },
+                { emoji: '🐛', title: '内疚处方 #03', quote: '完美主义是系统里最大的 Bug。', insight: '接受那个“做不到”的自己。60 分的父母/员工也是好父母/员工。放过自己，也是一种能力。' },
+                { emoji: '🤝', title: '内疚处方 #04', quote: '你也是第一次做人，原谅自己吧。', insight: '谁都会犯错，谁都有顾不过来的时候。对自己宽容一点，就像你宽容你的朋友一样。你已经尽力了。' },
+                { emoji: '🎭', title: '内疚处方 #05', quote: '不要背负不属于你的责任。', insight: '别人的情绪是别人的课题，不是你的错。分清什么是你的责任，什么是别人的。别把全世界都扛在肩上。' },
+                { emoji: '💖', title: '内疚处方 #06', quote: '爱自己，从来不是自私。', insight: '只有满溢的杯子才能倒出水给别人。先爱自己，让自己开心，你散发的能量才能滋养身边的人。' },
+                { emoji: '🛑', title: '内疚处方 #07', quote: '停止自我审判的法庭游戏。', insight: '脑子里那个指责你的声音，不是真理，只是杂音。关掉它，告诉它：“我做得够好了，闭嘴。”' },
+                { emoji: '🌈', title: '内疚处方 #08', quote: '不完美才真实，真实才可爱。', insight: '孩子需要的不是完美的父母，而是快乐的父母。团队需要的不是机器，而是鲜活的领袖。做真实的自己就好。' },
+                { emoji: '🔄', title: '内疚处方 #09', quote: '换个角度看，这也许是最好的安排。', insight: '因为没陪孩子，孩子学会了独立；因为没做完工作，团队学会了分担。别只看缺失，看看得到的。' },
+                { emoji: '🙏', title: '内疚处方 #10', quote: '我想对那个内疚的自己说声：辛苦了。', insight: '看见那个努力想周全所有的自己，抱抱他/她。你真的很不容易，谢谢你一直以来的坚持。' }
+            ],
+            'lonely': [
+                { emoji: '🌵', title: '孤独处方 #01', quote: '孤独，是优秀系统在进行“独立运算”时的伴生状态。', insight: '不要试图用无效社交来填充孤独。试着把孤独重构为“独处”。这是你升级内核、下载智慧的最佳带宽时刻。' },
+                { emoji: '📡', title: '孤独处方 #02', quote: '高频信号，往往难以被捕捉。', insight: '你感到孤独，可能是因为你的频率变了。与其向下兼容去寻找热闹，不如静静等待那个同频的信号出现。' },
+                { emoji: '🛠️', title: '孤独处方 #03', quote: '正在进行系统自检与升级。', insight: '就像手机升级系统时无法通话一样。这段孤独期，是你版本迭代的必要保护。享受这种安静的生长。' },
+                { emoji: '🌌', title: '孤独处方 #04', quote: '你是你自己最好的朋友。', insight: '学会和自己相处，是人生最重要的课题。在孤独中，你能听见内心最真实的声音。那是灵魂在与你对话。' },
+                { emoji: '📚', title: '孤独处方 #05', quote: '去书中寻找那些伟大的灵魂。', insight: '当现实中无人可语时，书本是最好的避难所。穿越时空与智者对话，你会发现，你从未真正孤独过。' },
+                { emoji: '🎨', title: '孤独处方 #06', quote: '把孤独变成创造的燃料。', insight: '很多伟大的作品都诞生于孤独。去写作，去画画，去思考。让孤独开出花来，那是你独一无二的勋章。' },
+                { emoji: '🍵', title: '孤独处方 #07', quote: '享受一个人的茶时光。', insight: '不用迎合谁，不用照顾谁。这一刻只属于你。泡杯茶，发个呆，这是多么奢侈的自由啊。' },
+                { emoji: '🤝', title: '孤独处方 #08', quote: '主动去连接，如果你真的需要。', insight: '如果你渴望连接，就去打个电话，发个信息。别怕打扰，也许对方也正在等一个信号。勇敢一点。' },
+                { emoji: '🌟', title: '孤独处方 #09', quote: '你不是一座孤岛，你是星辰大海的一部分。', insight: '抬头看看天，脚踩踩地。我们与万物相连。感受风，感受光，你永远被这个宇宙拥抱着。' },
+                { emoji: '🚶', title: '孤独处方 #10', quote: '走出去，去人群中走走。', insight: '不需要说话，只是去感受人气。去菜市场，去公园。看人间烟火，你会发现，你依然活在这个热气腾腾的世界里。' }
+            ]
+        };
+
+        function startCharging(type) {
+            // 切换到充电界面
+            document.getElementById('screen-diagnose').classList.add('hidden-section');
+            document.getElementById('screen-charging').classList.remove('hidden-section');
+            document.getElementById('screen-charging').style.display = 'flex';
+
+            // 随机抽取文案
+            const pool = prescriptions[type];
+            const randomIndex = Math.floor(Math.random() * pool.length);
+            const data = pool[randomIndex];
+
+            document.getElementById('result-emoji').innerText = data.emoji;
+            document.getElementById('result-title').innerText = data.title;
+            document.getElementById('result-quote').innerText = data.quote;
+            document.getElementById('result-insight').innerText = data.insight;
+
+            // 充电动画逻辑
+            const fill = document.getElementById('charging-fill');
+            const percent = document.getElementById('percent-text');
+            
+            fill.style.transition = 'height 0.1s linear';
+            fill.style.height = '0%';
+            
+            setTimeout(() => {
+                fill.style.height = '100%';
+                
+                let p = 0;
+                const interval = setInterval(() => {
+                    p += 2;
+                    if(p > 100) p = 100;
+                    percent.innerText = p + '%';
+                    
+                    if(p >= 100) {
+                        clearInterval(interval);
+                        setTimeout(() => {
+                            document.getElementById('screen-charging').style.display = 'none';
+                            document.getElementById('screen-charging').classList.add('hidden-section');
+                            document.getElementById('screen-result').classList.remove('hidden-section');
+                        }, 500);
+                    }
+                }, 50); 
+            }, 100);
+        }
+
+        // 丝滑重置功能
+        function resetApp() {
+            document.getElementById('screen-result').classList.add('hidden-section');
+            
+            const fill = document.getElementById('charging-fill');
+            fill.style.transition = 'none';
+            fill.style.height = '0%';
+            document.getElementById('percent-text').innerText = '0%';
+            
+            const diagnose = document.getElementById('screen-diagnose');
+            diagnose.classList.remove('hidden-section');
+            diagnose.classList.remove('fade-in');
+            void diagnose.offsetWidth; 
+            diagnose.classList.add('fade-in');
+        }
+
+        // 弹窗控制逻辑
+        function showQRCode() {
+            const qrScreen = document.getElementById('screen-qr');
+            qrScreen.classList.remove('hidden-section');
+            qrScreen.style.display = 'flex';
+            
+            qrScreen.classList.remove('fade-in');
+            void qrScreen.offsetWidth;
+            qrScreen.classList.add('fade-in');
+        }
+
+        function closeQRCode() {
+            const qrScreen = document.getElementById('screen-qr');
+            qrScreen.classList.add('hidden-section');
+            qrScreen.style.display = 'none';
+        }
+    </script>
+</body>
+</html>
